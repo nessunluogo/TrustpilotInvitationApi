@@ -114,6 +114,76 @@ class Client
     }
 
     /**
+     * @param InvitationContext $context
+     * @param Recipient $recipient
+     * @param Sender $sender
+     * @param $referenceNumber
+     * @param $locationId
+     * @param $type
+     * @param \DateTimeInterface $time
+     * @param null $serviceTags
+     * @param null $products
+     * @param null $productSkus
+     * @return array
+     */
+    public function emailInvitations(
+        InvitationContext  $context,
+        Recipient          $recipient,
+        Sender             $sender,
+                           $referenceNumber,
+                           $locationId,
+                           $type,
+        \DateTimeInterface $time = null,
+                           $serviceTags = null,
+                           $products = null,
+                           $productSkus = null
+    )
+    {
+        if (null === $time) {
+            $time = new \DateTime();
+        }
+
+        $json = [
+            'senderName' => $sender->getName(),
+            'senderEmail' => $sender->getEmail(),
+            'replyTo' => $sender->getReplyEmail(),
+            'locale' => $context->getLocale(),
+            'locationId' => $locationId,
+            'referenceNumber' => $referenceNumber,
+            'consumerEmail' => $recipient->getEmail(),
+            'consumerName' => $recipient->getName(),
+            'type' => $type,
+        ];
+
+        if (!empty($serviceTags)) {
+            $json['serviceReviewInvitation'] = (object)[
+                'templateId' => $context->getTemplateId(),
+                'preferredSendTime' => $time->format('c'),
+                'redirectUri' => $context->getRedirectUri(),
+                'tags' => $serviceTags,
+            ];
+        }
+
+        if (!empty($products) || !empty($productSkus)) {
+            $productReviewInvitation = [
+                'templateId' => $context->getTemplateId(),
+                'preferredSendTime' => $time->format('c'),
+                'redirectUri' => $context->getRedirectUri(),
+            ];
+            if (!empty($products)) {
+                $productReviewInvitation['products'] = $products;
+            } else {
+                $productReviewInvitation['productSkus'] = $productSkus;
+            }
+            $json['productReviewInvitation'] = (object)$productReviewInvitation;
+        }
+
+        $url = 'private/business-units/' . $context->getBusinessUnitId() . '/email-invitations';
+
+        return $this->makeRequest($url, $json, [], $this->endpointApi);
+    }
+
+    /**
      * @param string $businessUnitId
      * @param int $page
      * @param int $perPage
