@@ -110,7 +110,7 @@ class Client
 
         $url = 'private/product-reviews/business-units/' . $context->getBusinessUnitId() . '/invitation-links';
 
-        return $this->makeRequest($url, $json, [], $this->endpointApi);
+        return $this->makeRequest($url, $json, [], $this->endpointInvitationApi);
     }
 
     /**
